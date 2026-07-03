@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>timatimatima — Облачное хранилище</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #ffe3a2;
+            color: #1a1a1a;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 680px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* ─── Картинка в правом верхнем углу ─── */
+        .corner-image {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 171px;
+            height: 129px;
+        }
+
+        .corner-image img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: fill;
+        }
+
+        /* ─── Header ─── */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 8px;
+        }
+
+        .logo {
+            display: inline-block;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            text-decoration: none;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: #6b6b6b;
+            font-size: 15px;
+            font-weight: 300;
+        }
+
+        /* ─── Card ─── */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.04);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 12px 40px rgba(0,0,0,0.06);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6b6b6b;
+        }
+
+        /* ─── Upload Area ─── */
+        .upload-area {
+            border: 2px dashed #e0e0e0;
+            border-radius: 12px;
+            padding: 44px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #fafafa;
+        }
+
+        .upload-area:hover {
+            border-color: #1a1a1a;
+            background: #f5f5f5;
+        }
+
+        .upload-area.dragover {
+            border-color: #1a1a1a;
+            background: #f0f0f0;
+            transform: scale(1.01);
+        }
+
+        .upload-icon {
+            font-size: 34px;
+            margin-bottom: 10px;
+            display: block;
+            opacity: 0.7;
+        }
+
+        .upload-area h3 {
+            font-size: 16px;
+            font-weight: 500;
+            color: #1a1a1a;
+            margin-bottom: 2px;
+        }
+
+        .upload-area p {
+            font-size: 14px;
+            color: #8a8a8a;
+        }
+
+        .upload-hint {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #b0b0b0;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* ─── Progress ─── */
+        .progress-container {
+            margin-top: 18px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #f0f0f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #1a1a1a;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            font-size: 13px;
+            color: #6b6b6b;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* ─── Files ─── */
+        .files-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: #fafafa;
+            border-radius: 8px;
+            transition: background 0.15s ease;
+            border: 1px solid transparent;
+        }
+
+        .file-item:hover {
+            background: #f5f5f5;
+        }
+
+        .file-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            opacity: 0.8;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-size: 14px;
+            font-weight: 400;
+            color: #1a1a1a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-meta {
+            font-size: 12px;
+            color: #8a8a8a;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 28px 16px;
+            color: #8a8a8a;
+        }
+
+        .empty-state .emoji {
+            font-size: 30px;
+            display: block;
+            margin-bottom: 6px;
+            opacity: 0.5;
+        }
+
+        /* ─── Buttons ─── */
+        .btn {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 400;
+            transition: all 0.15s ease;
+            font-family: inherit;
+            background: transparent;
+            color: #6b6b6b;
+        }
+
+        .btn:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-outline {
+            border: 1px solid #e0e0e0;
+        }
+
+        .btn-outline:hover {
+            border-color: #1a1a1a;
+            background: transparent;
+        }
+
+        .btn-danger {
+            color: #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background: #fee;
+            color: #c0392b;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+
+        .btn-clear {
+            color: #8a8a8a;
+            font-size: 13px;
+        }
+
+        .btn-clear:hover {
+            color: #e74c3c;
+            background: transparent;
+        }
+
+        /* ─── Toast ─── */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a1a1a;
+            color: white;
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 400;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            z-index: 2000;
+            animation: fadeUp 0.3s ease;
+            text-align: center;
+            max-width: 90%;
+        }
+
+        .toast.success {
+            background: #1a1a1a;
+        }
+
+        .toast.error {
+            background: #e74c3c;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 768px) {
+            .corner-image {
+                width: 120px;
+                height: 90px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .card { padding: 20px; }
+            .header h1 { font-size: 22px; }
+            .upload-area { padding: 28px 16px; }
+            .corner-image {
+                width: 100px;
+                height: 75px;
+            }
+            .file-item { padding: 8px 12px; flex-wrap: wrap; }
+            .file-actions { width: 100%; justify-content: flex-end; }
+        }
+
+        @media (max-width: 400px) {
+            .corner-image {
+                width: 80px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ─── Картинка в правом верхнем углу ─── -->
+    <div class="corner-image">
+        <img src="https://media.discordapp.net/attachments/1477199065673629789/1522640572685484103/IMG_20260703_191413_001.jpg?ex=6a493509&is=6a47e389&hm=c06f48a23dc0e2eb0801df99c2df01f3608d4d662bd83fd78f816f65040eb2fe&=&format=webp&width=720&height=948" alt="">
+    </div>
+
+    <!-- ─── Main ─── -->
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <a href="#" class="logo">timatimatima</a>
+            <h1>Храните файлы в облаке.</h1>
+            <p>Перетащите файлы сюда или нажмите, чтобы загрузить.</p>
+        </header>
+
+        <!-- Upload -->
+        <div class="card">
+            <div class="upload-area" id="uploadArea">
+                <span class="upload-icon">📤</span>
+                <h3>Выберите файлы</h3>
+                <p>или перетащите их сюда</p>
+                <div class="upload-hint">Максимум 100 МБ на файл</div>
+                <input type="file" id="fileInput" multiple>
+            </div>
+
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Загрузка...</div>
+            </div>
+        </div>
+
+        <!-- Files -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Файлы</span>
+                <button class="btn btn-clear btn-sm" onclick="clearAll()">Очистить всё</button>
+            </div>
+            <div class="files-grid" id="filesGrid">
+                <div class="empty-state">
+                    <span class="emoji">📭</span>
+                    Нет загруженных файлов
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        const API_URL = 'http://localhost:8000';
+
+		let files = [];
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const filesGrid = document.getElementById('filesGrid');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+
+        // ═══════════════════════════════════════════════════════════
+        //  3.  ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+        // ═══════════════════════════════════════════════════════════
+
+        function toast(message, type = 'success') {
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.textContent = message;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 2800);
+        }
+
+        function icon(name) {
+            const ext = name.split('.').pop().toLowerCase();
+            const map = {
+                jpg: '🖼️', jpeg: '🖼️', png: '🖼️', gif: '🖼️', webp: '🖼️', svg: '🖼️',
+                mp4: '🎬', avi: '🎬', mkv: '🎬', mov: '🎬', webm: '🎬',
+                mp3: '🎵', wav: '🎵', flac: '🎵', aac: '🎵',
+                pdf: '📄', doc: '📄', docx: '📄', xls: '📄', xlsx: '📄', ppt: '📄', pptx: '📄',
+                zip: '📦', rar: '📦', '7z': '📦', tar: '📦', gz: '📦',
+                txt: '📝', md: '📝', json: '📝', xml: '📝', csv: '📝',
+                exe: '⚙️', dmg: '💿', apk: '📱'
+            };
+            return map[ext] || '📎';
+        }
+
+        function size(bytes) {
+            if (bytes < 1024) return bytes + ' Б';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' КБ';
+            return (bytes / 1048576).toFixed(1) + ' МБ';
+        }
+
+        function copy(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(
+                    () => toast('Ссылка скопирована'),
+                    () => fallbackCopy(text)
+                );
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const input = document.createElement('input');
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            toast('Ссылка скопирована');
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        //  4.  РАБОТА С СЕРВЕРОМ
+        // ═══════════════════════════════════════════════════════════
+
+        // Загрузка файлов с сервера
+        async function loadFilesFromServer() {
+            try {
+                const response = await fetch(`${API_URL}/files`);
+                if (response.ok) {
+                    files = await response.json();
+                    render();
+                    console.log(`📁 Загружено ${files.length} файлов с сервера`);
+                } else {
+                    console.error('❌ Ошибка загрузки списка файлов:', response.status);
+                }
+            } catch (error) {
+                console.error('❌ Ошибка подключения к серверу:', error);
+                toast('Не удалось подключиться к серверу', 'error');
+            }
+        }
+
+        // Загрузка файла на сервер
+        async function upload(filesList) {
+            const valid = Array.from(filesList).filter(f => f.size <= 100 * 1024 * 1024);
+            if (!valid.length) {
+                toast('Файлы не выбраны или превышают 100 МБ', 'error');
+                return;
+            }
+
+            progressContainer.style.display = 'block';
+            let done = 0;
+
+            for (const file of valid) {
+                try {
+                    const pct = Math.round((done / valid.length) * 100);
+                    progressFill.style.width = pct + '%';
+                    progressText.textContent = `Загрузка ${file.name} (${done + 1}/${valid.length})`;
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    const response = await fetch(`${API_URL}/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.detail || error.error || 'Ошибка загрузки');
+                    }
+
+                    const result = await response.json();
+                    files.push(result.file);
+                    done++;
+                    toast(`Файл "${file.name}" загружен!`);
+
+                } catch (error) {
+                    toast(`Ошибка загрузки ${file.name}: ${error.message}`, 'error');
+                    console.error(error);
+                }
+            }
+
+            progressFill.style.width = '100%';
+            progressText.textContent = 'Готово!';
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                progressFill.style.width = '0%';
+            }, 800);
+
+            render();
+            if (done > 0) toast(`Загружено ${done} файлов`);
+        }
+
+        // Удаление файла
+        async function removeFile(i) {
+            if (!confirm('Удалить файл?')) return;
+            const file = files[i];
+            const name = file.name;
+
+            try {
+                const response = await fetch(`${API_URL}/files/${file.id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || error.error || 'Ошибка удаления');
+                }
+
+                files.splice(i, 1);
+                render();
+                toast(`«${name}» удалён`);
+
+            } catch (error) {
+                toast(`Ошибка удаления: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        // Очистка всех файлов
+        async function clearAll() {
+            if (!confirm('Удалить все файлы?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/files`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || error.error || 'Ошибка очистки');
+                }
+
+                files = [];
+                render();
+                toast('Все файлы удалены');
+
+            } catch (error) {
+                toast(`Ошибка очистки: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        //  5.  РЕНДЕРИНГ
+        // ═══════════════════════════════════════════════════════════
+
+        function render() {
+            if (files.length === 0) {
+                filesGrid.innerHTML = `
+                    <div class="empty-state">
+                        <span class="emoji">📭</span>
+                        Нет загруженных файлов
+                    </div>
+                `;
+                return;
+            }
+
+            filesGrid.innerHTML = files.map((f, i) => {
+                // Используем короткую ссылку, если есть, иначе обычную
+                const link = f.short_url || f.url;
+                return `
+                    <div class="file-item">
+                        <span class="file-icon">${icon(f.name)}</span>
+                        <div class="file-info">
+                            <div class="file-name">${f.name}</div>
+                            <div class="file-meta">${size(f.size)}</div>
+                        </div>
+                        <div class="file-actions">
+                            <button class="btn btn-sm btn-outline" onclick="copy('${link}')">Ссылка</button>
+                            <button class="btn btn-sm btn-danger" onclick="removeFile(${i})">×</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        //  6.  СОБЫТИЯ
+        // ═══════════════════════════════════════════════════════════
+
+        uploadArea.addEventListener('dragover', e => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) upload(e.dataTransfer.files);
+        });
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) upload(fileInput.files);
+            fileInput.value = '';
+        });
+
+        loadFilesFromServer();
+
+        console.log('🚀 timatimatima загружен');
+        console.log(`📡 API сервер: ${API_URL}`);
+    </script>
+</body>
+</html>
